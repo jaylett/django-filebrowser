@@ -265,20 +265,14 @@ class FileObjectAttributeTests(TestCase):
         # is_empty
         """
         # test with image
-        #self.assertEqual(self.f_image.directory, "fb_tmp_dir/fb_tmp_dir_sub/testimage.jpg")  # equals path_relative_directory
-        #self.assertEqual(self.f_image.folder, "fb_tmp_dir/fb_tmp_dir_sub")  # equals dirname
         self.assertEqual(self.f_image.is_folder, False)
         self.assertEqual(self.f_image.is_empty, False)
 
         # test with folder
-        #self.assertEqual(self.f_folder.directory, "fb_tmp_dir/fb_tmp_dir_sub")  # equals path_relative_directory
-        #self.assertEqual(self.f_folder.folder, "fb_tmp_dir")  # equals dirname
         self.assertEqual(self.f_folder.is_folder, True)
         self.assertEqual(self.f_folder.is_empty, False)
 
         # test with alternative folder
-        #self.assertEqual(self.f_folder_alt.directory, "fb_tmp_dir/fb_tmp_dir_sub/xxx")  # equals path_relative_directory
-        #self.assertEqual(self.f_folder_alt.folder, "fb_tmp_dir/fb_tmp_dir_sub")  # equals dirname
         self.assertEqual(self.f_folder_alt.is_folder, True)
         self.assertEqual(self.f_folder_alt.is_empty, True)
 

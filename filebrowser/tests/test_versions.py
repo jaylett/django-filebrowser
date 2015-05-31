@@ -125,12 +125,6 @@ class VersionTemplateTagsTests(TestCase):
         r = t.render(c)
         self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
-        # # FIXME: templatetag version with non-existing path
-        # t = Template('{% load fb_versions %}{% version path "large" %}')
-        # c = Context({"obj": self.f_image, "path": "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimagexxx.jpg"})
-        # r = t.render(c)
-        # self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
-
         # test placeholder with existing image
         filebrowser.templatetags.fb_versions.PLACEHOLDER = "fb_test_directory/fb_tmp_dir/fb_tmp_placeholder/testimage.png"
         filebrowser.templatetags.fb_versions.SHOW_PLACEHOLDER = True
@@ -218,13 +212,6 @@ class VersionTemplateTagsTests(TestCase):
         r = t.render(c)
         self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
         self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
-
-        # # FIXME: templatetag version with non-existing path
-        # t = Template('{% load fb_versions %}{% version_object path "large" as version_large %}{{ version_large.url }}')
-        # c = Context({"obj": self.f_image, "path": "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimagexxx.jpg"})
-        # r = t.render(c)
-        # self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
-        # self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
 
         # test placeholder with existing image
         filebrowser.templatetags.fb_versions.PLACEHOLDER = "fb_test_directory/fb_tmp_dir/fb_tmp_placeholder/testimage.png"

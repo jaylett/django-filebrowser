@@ -71,25 +71,6 @@ class Command(BaseCommand):
                     for version in VERSIONS:
                         versionobject = fileobject.version_generate(version)  # FIXME force?
 
-        # # walkt throu the filebrowser directory
-        # # for all/new files (except file versions itself and excludes)
-        # for dirpath,dirnames,filenames in os.walk(path, followlinks=True):
-        #     rel_dir = os.path.relpath(dirpath, os.path.realpath(settings.MEDIA_ROOT))
-        #     for filename in filenames:
-        #         filtered = False
-        #         # no "hidden" files (stating with ".")
-        #         if filename.startswith('.'):
-        #             continue
-        #         # check the exclude list
-        #         for re_prefix in filter_re:
-        #             if re_prefix.search(filename):
-        #                 filtered = True
-        #         if filtered:
-        #             continue
-        #         (tmp, extension) = os.path.splitext(filename)
-        #         if extension in EXTENSIONS["Image"]:
-        #             self.createVersions(os.path.join(rel_dir, filename), selected_version)
-
     def filter_images(self, item):
         filtered = item.filename.startswith('.')
         for re_prefix in filter_re:
