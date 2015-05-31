@@ -221,21 +221,18 @@ class FileObjectAttributeTests(TestCase):
         # test with image
         self.assertEqual(self.f_image.path, "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.png")
         self.assertEqual(self.f_image.path_relative_directory, "fb_tmp_dir/fb_tmp_dir_sub/testimage.png")
-        self.assertEqual(self.f_image.path_full, os.path.join(site.storage.location, site.directory, "fb_tmp_dir/fb_tmp_dir_sub/testimage.png"))
         self.assertEqual(self.f_image.dirname, "fb_tmp_dir/fb_tmp_dir_sub")
         self.assertEqual(self.f_image.url, site.storage.url(self.f_image.path))
 
         # test with folder
         self.assertEqual(self.f_folder.path, "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub")
         self.assertEqual(self.f_folder.path_relative_directory, "fb_tmp_dir/fb_tmp_dir_sub")
-        self.assertEqual(self.f_folder.path_full, os.path.join(site.storage.location, site.directory, "fb_tmp_dir/fb_tmp_dir_sub"))
         self.assertEqual(self.f_folder.dirname, "fb_tmp_dir")
         self.assertEqual(self.f_folder.url, site.storage.url(self.f_folder.path))
 
         # test with alternative folder
         self.assertEqual(self.f_folder_alt.path, "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/xxx")
         self.assertEqual(self.f_folder_alt.path_relative_directory, "fb_tmp_dir/fb_tmp_dir_sub/xxx")
-        self.assertEqual(self.f_folder_alt.path_full, os.path.join(site.storage.location, site.directory, "fb_tmp_dir/fb_tmp_dir_sub/xxx"))
         self.assertEqual(self.f_folder_alt.dirname, "fb_tmp_dir/fb_tmp_dir_sub")
         self.assertEqual(self.f_folder_alt.url, site.storage.url(self.f_folder_alt.path))
 
