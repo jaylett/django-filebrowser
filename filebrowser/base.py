@@ -540,8 +540,17 @@ class FileObject():
             self.site.storage.delete(version_path)
         self.site.storage.save(version_path, tmpfile)
         # set permissions
-        if DEFAULT_PERMISSIONS is not None:
-            os.chmod(self.site.storage.path(version_path), DEFAULT_PERMISSIONS)
+        try:
+            if DEFAULT_PERMISSIONS is not None:
+                os.chmod(
+                    self.site.storage.path(version_path),
+                    DEFAULT_PERMISSIONS,
+                )
+        except NotImplementedError:
+            # backend doesn't support absolute paths. it's probably
+            # remote, in which case it'll provide its own way of doing
+            # permissions (which probably aren't Unix permissions anyway)
+            pass
         return version_path
 
     # DELETE METHODS
