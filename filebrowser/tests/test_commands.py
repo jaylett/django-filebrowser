@@ -61,43 +61,29 @@ class CommandsTests(TestCase):
         # custom directory because this could be set with sites
         # and we cannot rely on filebrowser.settings
         self.directory = "fb_test_directory/"
-        self.directory_path = os.path.join(site.storage.location, self.directory)
-        if os.path.exists(self.directory_path):
-            self.fail("Test directory already exists.")
-        else:
-            os.makedirs(self.directory_path)
-        # set site directory
+        site.storage.makedirs(self.directory)
         site.directory = self.directory
 
         # VERSIONS
         self.versions = "_versionstestdirectory"
-        self.versions_path = os.path.join(site.storage.location, self.versions)
-        if os.path.exists(self.versions_path):
-            self.fail("Versions directory already exists.")
-        else:
-            os.makedirs(self.versions_path)
+        site.storage.makedirs(self.versions)
 
         # create temporary test folder and move testimage
-        self.tmpdir_name = os.path.join("fb_tmp_dir", "fb_tmp_dir_sub")
-        self.tmpdir_path = os.path.join(site.storage.location, self.directory, self.tmpdir_name)
-        if os.path.exists(self.tmpdir_path):
-            self.fail("Temporary testfolder already exists.")
-        else:
-            os.makedirs(self.tmpdir_path)
+        self.tmpdir_name = os.path.join(self.directory, "fb_tmp_dir", "fb_tmp_dir_sub")
+        site.storage.makedirs(self.tmpdir_name)
 
         # copy test image to temporary test folder
-        self.image_path = os.path.join(FILEBROWSER_PATH, "static", "filebrowser", "img", "testimage.jpg")
-        if not os.path.exists(self.image_path):
-            self.fail("Testimage not found.")
-        shutil.copy(self.image_path, self.tmpdir_path)
+        self.image_path = os.path.join(FILEBROWSER_PATH, "static", "filebrowser", "img", "cancel.png")
+        with open(self.image_path, 'rb') as f:
+            site.storage.save(posixpath.join(self.tmpdir_name, "testimage.png"), f)
 
         # set posixpath
         filebrowser.base.os.path = posixpath
 
         # fileobjects
-        self.f_image = FileObject(os.path.join(self.directory, self.tmpdir_name, "testimage.jpg"), site=site)
-        self.f_image_not_exists = FileObject(os.path.join(self.directory, self.tmpdir_name, "testimage_does_not_exist.jpg"), site=site)
-        self.f_folder = FileObject(os.path.join(self.directory, self.tmpdir_name), site=site)
+        self.f_image = FileObject(os.path.join(self.tmpdir_name, "testimage.png"), site=site)
+        self.f_image_not_exists = FileObject(os.path.join(self.tmpdir_name, "testimage_does_not_exist.jpg"), site=site)
+        self.f_folder = FileObject(self.tmpdir_name, site=site)
 
     def test_fb_version_generate(self):
         """
@@ -115,7 +101,12 @@ class CommandsTests(TestCase):
         filebrowser.management.commands.fb_version_remove.VERSIONS = filebrowser.base.VERSIONS
 
         # no versions
-        self.assertEqual(os.path.exists(os.path.join(settings.MEDIA_ROOT, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg")), False)
+        self.assertEqual(
+            site.storage.exists(
+                "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png",
+            ),
+            False,
+        )
 
         sys.stdin = StringIO("large")
         with capture(call_command, 'fb_version_generate', 'fb_test_directory') as output:
@@ -123,7 +114,12 @@ class CommandsTests(TestCase):
             self.assertIn('generating version "large"', output)
 
         # versions
-        self.assertEqual(os.path.exists(os.path.join(settings.MEDIA_ROOT, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg")), True)
+        self.assertEqual(
+            site.storage.exists(
+                "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png",
+            ),
+            True,
+        )
 
     def test_fb_version_remove(self):
         """
@@ -135,6 +131,10 @@ class CommandsTests(TestCase):
         """
         Restore original values/functions
         """
+
+        site.storage.rmtree(self.directory)
+        site.storage.rmtree(self.versions)
+
         filebrowser.base.os.path = self.original_path
         site.directory = self.original_directory
         filebrowser.base.VERSIONS_BASEDIR = self.original_versions_basedir
@@ -144,7 +144,3 @@ class CommandsTests(TestCase):
         filebrowser.management.commands.fb_version_remove.VERSIONS = self.original_versions
         filebrowser.base.ADMIN_VERSIONS = self.original_admin_versions
         sys.stdin = self.stdin
-
-        # remove temporary directory and test folder
-        shutil.rmtree(self.directory_path)
-        shutil.rmtree(self.versions_path)

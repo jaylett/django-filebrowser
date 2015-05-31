@@ -44,57 +44,38 @@ class VersionTemplateTagsTests(TestCase):
         # and we cannot rely on filebrowser.settings
         # FIXME: find better directory name
         self.directory = "fb_test_directory/"
-        self.directory_path = os.path.join(site.storage.location, self.directory)
-        if os.path.exists(self.directory_path):
-            self.fail("Test directory already exists.")
-        else:
-            os.makedirs(self.directory_path)
+        site.storage.makedirs(self.directory)
         # set site directory
         site.directory = self.directory
 
         # VERSIONS
         self.versions = "_versionstestdirectory"
-        self.versions_path = os.path.join(site.storage.location, self.versions)
-        if os.path.exists(self.versions_path):
-            self.fail("Versions directory already exists.")
-        else:
-            os.makedirs(self.versions_path)
+        site.storage.makedirs(self.versions)
 
         # create temporary test folder and move testimage
         # FIXME: find better path names
-        self.tmpdir_name = os.path.join("fb_tmp_dir", "fb_tmp_dir_sub")
-        self.tmpdir_path = os.path.join(site.storage.location, self.directory, self.tmpdir_name)
-        if os.path.exists(self.tmpdir_path):
-            self.fail("Temporary testfolder already exists.")
-        else:
-            os.makedirs(self.tmpdir_path)
+        self.tmpdir_name = os.path.join(self.directory, "fb_tmp_dir", "fb_tmp_dir_sub")
+        site.storage.makedirs(self.tmpdir_name)
 
         # copy test image to temporary test folder
-        self.image_path = os.path.join(FILEBROWSER_PATH, "static", "filebrowser", "img", "testimage.jpg")
-        if not os.path.exists(self.image_path):
-            self.fail("Testimage not found.")
-        shutil.copy(self.image_path, self.tmpdir_path)
+        self.image_path = os.path.join(FILEBROWSER_PATH, "static", "filebrowser", "img", "cancel.png")
+        with open(self.image_path, 'rb') as f:
+            site.storage.save(posixpath.join(self.tmpdir_name, "testimage.png"), f)
 
         # create temporary test folder (placeholder) and move testimage
         # FIXME: find better path names
-        self.tmpdir_name_ph = os.path.join("fb_tmp_dir", "fb_tmp_placeholder")
-        self.tmpdir_path_ph = os.path.join(site.storage.location, self.directory, self.tmpdir_name_ph)
-        if os.path.exists(self.tmpdir_path_ph):
-            self.fail("Temporary testfolder (placeholder) already exists.")
-        else:
-            os.makedirs(self.tmpdir_path_ph)
-
-        # copy test image to temporary test folder (placeholder)
-        shutil.copy(self.image_path, self.tmpdir_path_ph)
+        self.tmpdir_name_ph = os.path.join(self.directory, "fb_tmp_dir", "fb_tmp_placeholder")
+        with open(self.image_path, 'rb') as f:
+            site.storage.save(posixpath.join(self.tmpdir_name_ph, "testimage.png"), f)
 
         # set posixpath
         filebrowser.base.os.path = posixpath
 
         # fileobjects
-        self.f_image = FileObject(os.path.join(self.directory, self.tmpdir_name, "testimage.jpg"), site=site)
-        self.f_image_not_exists = FileObject(os.path.join(self.directory, self.tmpdir_name, "testimage_does_not_exist.jpg"), site=site)
-        self.f_folder = FileObject(os.path.join(self.directory, self.tmpdir_name), site=site)
-        self.f_placeholder = FileObject(os.path.join(self.directory, self.tmpdir_name_ph, "testimage.jpg"), site=site)
+        self.f_image = FileObject(os.path.join(self.tmpdir_name, "testimage.png"), site=site)
+        self.f_image_not_exists = FileObject(os.path.join(self.tmpdir_name, "testimage_does_not_exist.jpg"), site=site)
+        self.f_folder = FileObject(self.tmpdir_name, site=site)
+        self.f_placeholder = FileObject(os.path.join(self.tmpdir_name_ph, "testimage.png"), site=site)
 
     def test_version(self):
         """
@@ -122,27 +103,27 @@ class VersionTemplateTagsTests(TestCase):
 
         # templatetag version with hardcoded path
         t = Template('{% load fb_versions %}{% version path "large" %}')
-        c = Context({"obj": self.f_image, "path": "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.jpg"})
+        c = Context({"obj": self.f_image, "path": "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.png"})
         r = t.render(c)
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # templatetag version with obj
         t = Template('{% load fb_versions %}{% version obj "large" %}')
         c = Context({"obj": self.f_image})
         r = t.render(c)
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # templatetag version with obj.path
         t = Template('{% load fb_versions %}{% version obj.path "large" %}')
         c = Context({"obj": self.f_image})
         r = t.render(c)
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # templatetag version with suffix as variable
         t = Template('{% load fb_versions %}{% version obj.path suffix %}')
         c = Context({"obj": self.f_image, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # # FIXME: templatetag version with non-existing path
         # t = Template('{% load fb_versions %}{% version path "large" %}')
@@ -151,32 +132,32 @@ class VersionTemplateTagsTests(TestCase):
         # self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
 
         # test placeholder with existing image
-        filebrowser.templatetags.fb_versions.PLACEHOLDER = "fb_test_directory/fb_tmp_dir/fb_tmp_placeholder/testimage.jpg"
+        filebrowser.templatetags.fb_versions.PLACEHOLDER = "fb_test_directory/fb_tmp_dir/fb_tmp_placeholder/testimage.png"
         filebrowser.templatetags.fb_versions.SHOW_PLACEHOLDER = True
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = True
         t = Template('{% load fb_versions %}{% version obj.path suffix %}')
         c = Context({"obj": self.f_image, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
 
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = False
         t = Template('{% load fb_versions %}{% version obj.path suffix %}')
         c = Context({"obj": self.f_image, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # test placeholder with non-existing image
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = True
         t = Template('{% load fb_versions %}{% version obj.path suffix %}')
         c = Context({"obj": self.f_image_not_exists, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
 
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = False
         t = Template('{% load fb_versions %}{% version obj.path suffix %}')
         c = Context({"obj": self.f_image_not_exists, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
 
         try:
             # Check permissions
@@ -212,31 +193,31 @@ class VersionTemplateTagsTests(TestCase):
 
         # templatetag version_object with hardcoded path
         t = Template('{% load fb_versions %}{% version_object path "large" as version_large %}{{ version_large.url }}')
-        c = Context({"obj": self.f_image, "path": "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.jpg"})
+        c = Context({"obj": self.f_image, "path": "fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.png"})
         r = t.render(c)
-        self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # templatetag version_object with obj.path
         t = Template('{% load fb_versions %}{% version_object obj.path "large" as version_large %}{{ version_large.url }}')
         c = Context({"obj": self.f_image})
         r = t.render(c)
-        self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # templatetag version_object with obj
         t = Template('{% load fb_versions %}{% version_object obj "large" as version_large %}{{ version_large.url }}')
         c = Context({"obj": self.f_image})
         r = t.render(c)
-        self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # templatetag version_object with suffix as variable
         t = Template('{% load fb_versions %}{% version_object obj suffix as version_large %}{{ version_large.url }}')
         c = Context({"obj": self.f_image, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # # FIXME: templatetag version with non-existing path
         # t = Template('{% load fb_versions %}{% version_object path "large" as version_large %}{{ version_large.url }}')
@@ -246,36 +227,36 @@ class VersionTemplateTagsTests(TestCase):
         # self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
 
         # test placeholder with existing image
-        filebrowser.templatetags.fb_versions.PLACEHOLDER = "fb_test_directory/fb_tmp_dir/fb_tmp_placeholder/testimage.jpg"
+        filebrowser.templatetags.fb_versions.PLACEHOLDER = "fb_test_directory/fb_tmp_dir/fb_tmp_placeholder/testimage.png"
         filebrowser.templatetags.fb_versions.SHOW_PLACEHOLDER = True
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = True
         t = Template('{% load fb_versions %}{% version_object obj suffix as version_large %}{{ version_large.url }}')
         c = Context({"obj": self.f_image, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
+        self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
 
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = False
         t = Template('{% load fb_versions %}{% version_object obj suffix as version_large %}{{ version_large.url }}')
         c = Context({"obj": self.f_image, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg"))
+        self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png"))
 
         # test placeholder with non-existing image
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = True
         t = Template('{% load fb_versions %}{% version_object obj suffix as version_large %}{{ version_large.url }}')
         c = Context({"obj": self.f_image_not_exists, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
+        self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
 
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = False
         t = Template('{% load fb_versions %}{% version_object obj suffix as version_large %}{{ version_large.url }}')
         c = Context({"obj": self.f_image_not_exists, "suffix": "large"})
         r = t.render(c)
-        self.assertEqual(c["version_large"].url, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
-        self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
+        self.assertEqual(c["version_large"].url, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
+        self.assertEqual(r, site.storage.url("fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.png"))
 
     def test_version_setting(self):
         pass
@@ -284,6 +265,10 @@ class VersionTemplateTagsTests(TestCase):
         """
         Restore original values/functions
         """
+
+        site.storage.rmtree(self.directory)
+        site.storage.rmtree(self.versions)
+
         filebrowser.base.os.path = self.original_path
         site.directory = self.original_directory
         filebrowser.base.VERSIONS_BASEDIR = self.original_versions_basedir
@@ -294,7 +279,3 @@ class VersionTemplateTagsTests(TestCase):
         filebrowser.templatetags.fb_versions.PLACEHOLDER = self.original_placeholder
         filebrowser.templatetags.fb_versions.SHOW_PLACEHOLDER = self.original_show_placeholder
         filebrowser.templatetags.fb_versions.FORCE_PLACEHOLDER = self.original_force_placeholder
-
-        # remove temporary directory and test folder
-        shutil.rmtree(self.directory_path)
-        shutil.rmtree(self.versions_path)
