@@ -507,7 +507,7 @@ class FileListingTests(TestCase):
         filebrowser.base.os.path = posixpath
 
         # filelisting/fileobject
-        self.f_listing = FileListing(self.directory, sorting_by='date', sorting_order='desc')
+        self.f_listing = FileListing(self.directory, sorting_by='name', sorting_order='desc')
         self.f_listing_file = FileListing(os.path.join(self.directory, self.tmpdir_name, "testimage.png"))
 
     def test_init_attributes(self):
@@ -521,7 +521,7 @@ class FileListingTests(TestCase):
         """
         self.assertEqual(self.f_listing.path, 'fb_test_directory/')
         self.assertEqual(self.f_listing.filter_func, None)
-        self.assertEqual(self.f_listing.sorting_by, 'date')
+        self.assertEqual(self.f_listing.sorting_by, 'name')
         self.assertEqual(self.f_listing.sorting_order, 'desc')
 
     def test_listing(self):
@@ -568,10 +568,37 @@ class FileListingTests(TestCase):
         # results_walk_total
         # results_walk_filtered
         """
-        self.assertEqual(self.f_listing_file.walk(), [])
-        self.assertEqual(list(self.f_listing.walk()), [u'fb_tmp_dir/fb_tmp_dir_sub/testimage.png', u'fb_tmp_dir/fb_tmp_dir_sub', u'fb_tmp_dir', u'testimage.png'])
-        self.assertEqual(list(f.path for f in self.f_listing.files_walk_total()),  [u'fb_test_directory/testimage.png', u'fb_test_directory/fb_tmp_dir', u'fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub', u'fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.png'])
-        self.assertEqual(list(f.path for f in self.f_listing.files_walk_filtered()),  [u'fb_test_directory/testimage.png', u'fb_test_directory/fb_tmp_dir', u'fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub', u'fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.png'])
+        self.assertEqual(
+            self.f_listing_file.walk(),
+            [],
+        )
+        self.assertEqual(
+            set(self.f_listing.walk()),
+            set([
+                u'fb_tmp_dir/fb_tmp_dir_sub/testimage.png',
+                u'fb_tmp_dir/fb_tmp_dir_sub',
+                u'fb_tmp_dir',
+                u'testimage.png',
+            ]),
+        )
+        self.assertEqual(
+            list(f.path for f in self.f_listing.files_walk_total()),
+            [
+                u'fb_test_directory/testimage.png',
+                u'fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.png',
+                u'fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub',
+                u'fb_test_directory/fb_tmp_dir',
+            ],
+        )
+        self.assertEqual(
+            list(f.path for f in self.f_listing.files_walk_filtered()),
+            [
+                u'fb_test_directory/testimage.png',
+                u'fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub/testimage.png',
+                u'fb_test_directory/fb_tmp_dir/fb_tmp_dir_sub',
+                u'fb_test_directory/fb_tmp_dir',
+            ],
+        )
         self.assertEqual(self.f_listing.results_walk_total(), 4)
         self.assertEqual(self.f_listing.results_walk_filtered(), 4)
 
