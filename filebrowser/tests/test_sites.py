@@ -383,7 +383,6 @@ def setUp(self):
 def tearDown(self):
     # Delete a left-over tmp directories, if there's any
     if hasattr(self, 'tmpdir') and self.tmpdir:
-        print("Removing left-over tmp dir:", self.tmpdir.path)
         self.site.storage.rmtree(self.tmpdir.path)
 
 
@@ -412,7 +411,6 @@ this_module = sys.modules[__name__]
 
 ## Create a test class for each deployed filebrowser site
 for site in all_sites:
-    print('Creating Test for the FileBrowser site:', site)
     # Create a subclass of TestCase
     testcase_class = type('TestSite_' + site, (TestCase,), {'site_name': site, 'c': Client(), 'tmpdirs': None})
     # Add setUp, tearDown, and runTest methods

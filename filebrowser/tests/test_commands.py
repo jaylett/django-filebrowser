@@ -1,6 +1,8 @@
 # coding: utf-8
 
 # PYTHON IMPORTS
+from contextlib import contextmanager
+from cStringIO import StringIO
 import os
 import ntpath
 import posixpath
@@ -25,6 +27,21 @@ from filebrowser.management.commands import fb_version_generate, fb_version_remo
 
 TESTS_PATH = os.path.dirname(os.path.abspath(__file__))
 FILEBROWSER_PATH = os.path.split(TESTS_PATH)[0]
+
+
+# http://schinckel.net/2013/04/15/capture-and-test-sys.stdout-sys.stderr-in-unittest.testcase/
+@contextmanager
+def capture(command, *args, **kwargs):
+    """
+    with capture(callable, *args, **kwargs) as output:
+      self.assertEquals("Expected output", output)
+    """
+
+    out, sys.stdout = sys.stdout, StringIO()
+    command(*args, **kwargs)
+    sys.stdout.seek(0)
+    yield sys.stdout.read()
+    sys.stdout = out
 
 
 class CommandsTests(TestCase):
@@ -101,7 +118,9 @@ class CommandsTests(TestCase):
         self.assertEqual(os.path.exists(os.path.join(settings.MEDIA_ROOT, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg")), False)
 
         sys.stdin = StringIO("large")
-        call_command('fb_version_generate', 'fb_test_directory')
+        with capture(call_command, 'fb_version_generate', 'fb_test_directory') as output:
+            self.assertIn('Select a version', output)
+            self.assertIn('generating version "large"', output)
 
         # versions
         self.assertEqual(os.path.exists(os.path.join(settings.MEDIA_ROOT, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg")), True)
