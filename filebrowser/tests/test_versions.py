@@ -178,11 +178,18 @@ class VersionTemplateTagsTests(TestCase):
         r = t.render(c)
         self.assertEqual(r, os.path.join(settings.MEDIA_URL, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_placeholder/testimage_large.jpg"))
 
-        # Check permissions
-        if DEFAULT_PERMISSIONS is not None:
-            permissions_default = oct(DEFAULT_PERMISSIONS)
-            permissions_file = oct(os.stat(os.path.join(settings.MEDIA_ROOT, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.jpg")).st_mode & 0o777)
-            self.assertEqual(permissions_default, permissions_file)
+        try:
+            # Check permissions
+            if DEFAULT_PERMISSIONS is not None:
+                permissions_default = oct(DEFAULT_PERMISSIONS)
+                permissions_file = oct(os.stat(os.path.join(settings.MEDIA_ROOT, "fb_test_directory/_versions/fb_tmp_dir/fb_tmp_dir_sub/testimage_large.png")).st_mode & 0o777)
+                self.assertEqual(permissions_default, permissions_file)
+        except OSError:
+            # we can't do that check if storage is remote, in which case
+            # it won't implement Unix file permissions anyway. The file must
+            # exist or a local backend wouldn't have passed all the earlier
+            # tests, so this should only drop through here for remote backends.
+            pass
 
     def test_version_object(self):
         """
