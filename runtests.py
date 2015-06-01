@@ -7,7 +7,10 @@ from django.conf import settings
 
 AWS_STORAGE_BUCKET_NAME=os.environ.get('AWS_STORAGE_BUCKET_NAME')
 THIS_DIR=os.path.dirname(os.path.dirname(__file__))
-DEFAULT_FILE_STORAGE='django.core.files.storage.FileSystemStorage'
+if AWS_STORAGE_BUCKET_NAME is None:
+    DEFAULT_FILE_STORAGE='django.core.files.storage.FileSystemStorage'
+else:
+    DEFAULT_FILE_STORAGE='test_s3backend.S3Storage'
 
 settings.configure(
     DEBUG=True,
@@ -34,6 +37,11 @@ settings.configure(
     ),
     ROOT_URLCONF='test_urls',
     DEFAULT_FILE_STORAGE=DEFAULT_FILE_STORAGE,
+    AWS_STORAGE_BUCKET_NAME=AWS_STORAGE_BUCKET_NAME,
+    AWS_ACCESS_KEY_ID=os.environ.get('AWS_ACCESS_KEY_ID'),
+    AWS_SECRET_ACCESS_KEY=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+    AWS_PRELOAD_METADATA=True,
+    AWS_QUERYSTRING_AUTH=False,
     MEDIA_ROOT=os.path.join(THIS_DIR, 'test_media'),
     FILEBROWSER_VERSIONS_BASEDIR='_versions/',
     FILEBROWSER_DIRECTORY='uploads/',
