@@ -1,7 +1,6 @@
 # coding: utf-8
 
 # PYTHON IMPORTS
-import os
 import re
 
 # DJANGO IMPORTS
@@ -34,9 +33,6 @@ class Command(BaseCommand):
             path = media_path
         else:
             path = DIRECTORY
-
-        if not os.path.isdir(os.path.join(settings.MEDIA_ROOT, path)):
-            raise CommandError('<media_path> must be a directory in MEDIA_ROOT (If you don\'t add a media_path the default path is DIRECTORY).\n"%s" is no directory.' % path)
 
         # get version name
         while 1:
