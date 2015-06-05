@@ -566,14 +566,27 @@ class FileBrowserSite(object):
                 old_file = smart_text(file_path)
                 new_file = smart_text(uploadedfile)
                 self.storage.move(new_file, old_file, allow_overwrite=True)
-                full_path = FileObject(smart_text(old_file), site=self).path_full
+                try:
+                    full_path = FileObject(
+                        smart_text(old_file),
+                        site=self,
+                    ).path_full
+                except NotImplementedError:
+                    full_path = None
             else:
                 file_name = smart_text(uploadedfile)
                 filedata.name = os.path.relpath(file_name, path)
-                full_path = FileObject(smart_text(file_name), site=self).path_full
+                try:
+                    full_path = FileObject(
+                        smart_text(file_name),
+                        site=self,
+                    ).path_full
+                except NotImplementedError:
+                    full_path = None
+
 
             # set permissions
-            if DEFAULT_PERMISSIONS is not None:
+            if DEFAULT_PERMISSIONS is not None and full_path is not None:
                 os.chmod(full_path, DEFAULT_PERMISSIONS)
 
             f = FileObject(smart_text(file_name), site=self)
