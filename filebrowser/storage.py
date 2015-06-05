@@ -70,6 +70,8 @@ class S3BotoStorageMixin(StorageMixin):
         return self.exists(name)
 
     def isdir(self, name):
+        if name.endswith('/'):
+            return True
         # That's some inefficient implementation...
         # If there are some files having 'name' as their prefix, then
         # the name is considered to be a directory
